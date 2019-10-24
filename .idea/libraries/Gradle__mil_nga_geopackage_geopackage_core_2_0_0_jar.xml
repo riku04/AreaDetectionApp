@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: mil.nga.geopackage:geopackage-core:2.0.0@jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/mil.nga.geopackage/geopackage-core/2.0.0/86c1ddff9940f1ad09e7bcfbbc78a729b004d762/geopackage-core-2.0.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/mil.nga.geopackage/geopackage-core/2.0.0/5f755beabe79b581e5bfc6cae6de4ac5fde504d4/geopackage-core-2.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

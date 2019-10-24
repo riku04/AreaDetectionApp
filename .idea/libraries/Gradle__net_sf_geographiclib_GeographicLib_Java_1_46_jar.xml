@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: net.sf.geographiclib:GeographicLib-Java:1.46@jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.sf.geographiclib/GeographicLib-Java/1.46/1fc7023b26c0361e594d6fad664cacf86753e497/GeographicLib-Java-1.46.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.sf.geographiclib/GeographicLib-Java/1.46/d00d17857393a2b4f7887e9a8740a74450970f9b/GeographicLib-Java-1.46-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

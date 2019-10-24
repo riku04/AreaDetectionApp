@@ -1,0 +1,2 @@
+include ':app', ':usbserialforandroid'
+include ':app', ':osmdroid-shape-extension-lib'

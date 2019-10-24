@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    tools:context="com.example.ueda_r.taiseiApp.ChildSettingFragment">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorFabText">
+
+        <FrameLayout
+            android:id="@+id/customToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="64dp">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:background="@color/colorPrimary" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/childSettingBackButton"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="end|center"
+                    android:layout_marginLeft="16dp"
+                    android:background="@color/colorPrimary"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/navigate_before" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginRight="16dp"
+                    android:text="子機の設定"
+                    android:textColor="@color/colorFabText"
+                    android:textSize="18sp" />
+
+                <ProgressBar
+                    android:id="@+id/scanProgress"
+                    style="?android:attr/progressBarStyle"
+                    android:layout_width="114dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_gravity="end|center"
+                    android:layout_marginRight="16dp"
+                    android:layout_weight="1" />
+            </LinearLayout>
+        </FrameLayout>
+
+
+
+        <ListView
+            android:id="@+id/scanResultListView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/buttons"
+            android:layout_centerHorizontal="true"
+
+            />
+        <LinearLayout
+            android:id="@+id/buttons"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:gravity="center"
+            android:layout_below="@+id/customToolbar">
+
+            <Button
+                android:id="@+id/checkAllButton"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/customToolbar"
+                android:textSize="20dp"
+                android:enabled="false"
+                android:text="☑" />
+
+            <Button
+                android:id="@+id/multiButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/customToolbar"
+                android:layout_toEndOf="@+id/checkAllButton"
+                android:enabled="false"
+                android:text="一括設定" />
+
+            <Button
+                android:id="@+id/scanButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/customToolbar"
+                android:layout_toEndOf="@+id/multiButton"
+                android:text="スキャン" />
+
+            <Button
+                android:id="@+id/clearButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_toEndOf="@+id/scanButton"
+                android:text="クリア" />
+        </LinearLayout>
+        　
+    </RelativeLayout>
+</FrameLayout>

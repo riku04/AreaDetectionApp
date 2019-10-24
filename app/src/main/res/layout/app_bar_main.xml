@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.ueda_r.taiseiApp.MainActivity">
+
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+    </android.support.design.widget.AppBarLayout>
+
+    <include
+        android:id="@+id/include"
+        layout="@layout/content_main" />
+
+    <LinearLayout
+        android:id="@+id/alertLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="84dp"
+        android:background="@color/Red"
+        android:orientation="horizontal"
+        android:gravity="center"
+        >
+        <TextView
+            android:id="@+id/alertText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="alertalertalertalertalert"
+            android:textSize="18dp"
+            android:layout_marginLeft="16dp"
+            android:textColor="@color/Yellow"
+            android:gravity="center"
+            />
+        <Button
+            android:id="@+id/alertConfirmButton"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|center"
+            android:backgroundTint="@color/Yellow"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:text="OK"
+            />
+    </LinearLayout>
+
+
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_Undo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|left"
+        android:layout_margin="@dimen/fab_margin"
+        app:borderWidth="0dp"
+        app:backgroundTint="@color/colorPrimary"
+        app:srcCompat="@android:drawable/ic_menu_revert" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_SetMarker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center"
+        android:layout_margin="@dimen/fab_margin"
+        app:borderWidth="0dp"
+        app:backgroundTint="@color/colorAccent"
+        app:srcCompat="@android:drawable/ic_menu_myplaces" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_NowLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        app:borderWidth="0dp"
+        app:backgroundTint="@color/colorPrimary"
+        app:srcCompat="@android:drawable/ic_menu_mylocation" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_AreaDetermine"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|right"
+        android:layout_margin="16dp"
+        app:borderWidth="0dp"
+        app:backgroundTint="@color/colorPrimary"
+        app:srcCompat="@android:drawable/ic_menu_add" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_OpenDrawer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|left"
+        android:layout_margin="16dp"
+        app:borderWidth="0dp"
+        app:backgroundTint="@color/colorPrimary"
+        app:srcCompat="@drawable/hamburger"
+        />
+
+    <com.robertlevonyan.views.customfloatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_ToggleLogging"
+        android:layout_width="70dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center"
+        android:layout_margin="16dp"
+        app:fabColor="@color/colorPrimary"
+        app:fabType="roundedSquare"
+        app:fabIcon="@android:drawable/ic_menu_edit"
+        app:fabIconColor="@color/colorAccent"
+        app:fabText="判定開始"
+        app:fabTextColor="@color/colorAccent"
+        />
+
+    <Button
+        android:id="@+id/logRemoveButton"
+        android:text="OK"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="100dp"
+        />
+
+    <ProgressBar
+        android:id="@+id/calculateGpsProgress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_anchor="@+id/include"
+        app:layout_anchorGravity="bottom|center" />
+
+</android.support.design.widget.CoordinatorLayout>

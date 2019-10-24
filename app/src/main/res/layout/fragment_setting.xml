@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.ueda_r.taiseiApp.SettingFragment">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorFabText">
+
+        <FrameLayout
+            android:id="@+id/customToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="64dp">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:background="@color/colorPrimary" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ImageButton
+                    android:id="@+id/settingBackButton"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="left|center"
+                    android:layout_marginLeft="16dp"
+                    android:background="@color/colorPrimary"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/navigate_before" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginRight="16dp"
+                    android:text="設定"
+                    android:textColor="@color/colorFabText"
+                    android:textSize="18sp" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/setting_user"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:layout_below="@+id/customToolbar">
+
+            <TextView
+                android:id="@+id/setting_menu_user"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="0dp"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center|left"
+                android:text="　ユーザー設定"
+                android:textColor="@color/Black"
+                android:textSize="16dp" />
+        </FrameLayout>
+
+        <View
+            android:id="@+id/setting_margin_gray_1"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_below="@id/setting_user"
+            android:background="@color/colorShadowEnd"></View>
+
+        <FrameLayout
+            android:id="@+id/setting_alert"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:layout_below="@+id/setting_margin_gray_1">
+
+            <TextView
+                android:id="@+id/setting_menu_alert"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="0dp"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center|left"
+                android:text="　警報設定"
+                android:textColor="@color/Black"
+                android:textSize="16dp" />
+        </FrameLayout>
+
+        <View
+            android:id="@+id/setting_margin_gray_2"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_below="@+id/setting_alert"
+            android:background="@color/colorShadowEnd"></View>
+
+
+        <FrameLayout
+            android:id="@+id/setting_log"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:layout_below="@+id/setting_margin_gray_2">
+
+            <TextView
+                android:id="@+id/setting_menu_log"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="0dp"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center|left"
+                android:text="　履歴保存設定"
+                android:textColor="@color/Black"
+                android:textSize="16dp" />
+        </FrameLayout>
+
+        <View
+            android:id="@+id/setting_margin_gray_3"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_below="@+id/setting_log"
+            android:background="@color/colorShadowEnd"></View>
+
+        <!--<FrameLayout-->
+            <!--android:id="@+id/setting_map"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="46dp"-->
+            <!--android:layout_below="@+id/setting_margin_gray_3">-->
+
+            <!--<TextView-->
+                <!--android:id="@+id/setting_menu_map"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="match_parent"-->
+                <!--android:layout_marginLeft="0dp"-->
+                <!--android:background="?attr/selectableItemBackground"-->
+                <!--android:gravity="center|left"-->
+                <!--android:text="　地図変更"-->
+                <!--android:textColor="@color/Black"-->
+                <!--android:textSize="16dp" />-->
+        <!--</FrameLayout>-->
+
+        <!--<View-->
+            <!--android:id="@+id/setting_margin_gray_4"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="1dp"-->
+            <!--android:layout_below="@+id/setting_map"-->
+            <!--android:background="@color/colorShadowEnd"></View>-->
+
+    </RelativeLayout>
+</FrameLayout>

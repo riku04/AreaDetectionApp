@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: mil.nga:wkb:1.0.4@jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/mil.nga/wkb/1.0.4/5fef556af3c43ebb33a71c786a378095cd7e961c/wkb-1.0.4.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/mil.nga/wkb/1.0.4/ac3e92d78a3e57654ebb31d05c4ec6419121b6f0/wkb-1.0.4-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

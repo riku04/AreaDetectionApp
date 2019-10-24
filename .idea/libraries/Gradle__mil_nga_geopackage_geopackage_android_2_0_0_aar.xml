@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: mil.nga.geopackage:geopackage-android:2.0.0@aar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/3d4622d2dafbc0b00143c6c8e20ca66b/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/3d4622d2dafbc0b00143c6c8e20ca66b/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/mil.nga.geopackage/geopackage-android/2.0.0/f6d1f58579c210a07ad07dda923bc348aa5c1b17/geopackage-android-2.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

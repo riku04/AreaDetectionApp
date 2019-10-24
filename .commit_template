@@ -1,0 +1,24 @@
+# ==== Prefixes ====
+# [fix] バグ修正
+# [hotfix]重大なバグ修正
+# [feat] 機能追加
+# [update] 機能修正・改善
+# [style] コードスタイル変更
+# [docs] 仕様書の変更
+# [refactor] リファクタリング
+# [test] テストの修正・改善
+# [upgrade] 依存パッケージなどの更新
+# [add]ファイル追加
+# [remove] ファイル削除
+# [wip]開発途中
+
+# ==== Format ====
+# [Prefixe]Subject
+#
+# Commit body...
+
+# ==== Rules ====
+# 1. 空白行をSubjectとbodyの間に挿入する
+# 2. bodyは50文字以内
+# 3. bodyは何をなぜどのように変更したか説明する
+

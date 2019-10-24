@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item android:title="禁止領域設定">
+            <menu>
+                <item
+                    android:id="@+id/nav_read_area"
+                    android:icon="@drawable/read"
+                    android:title="読み出し" />
+                <item
+                    android:id="@+id/nav_delete_area"
+                    android:icon="@drawable/delete"
+                    android:title="地図上の全領域を削除" />
+                <item
+                    android:id="@+id/nav_save_area"
+                    android:icon="@drawable/save"
+                    android:title="保存" />
+                <!--<item-->
+                    <!--android:id="@+id/nav_share_area"-->
+                    <!--android:icon="@drawable/ic_menu_share"-->
+                    <!--android:title="共有" />-->
+            </menu>
+        </item>
+
+        <group>
+            <item
+                android:id="@+id/nav_confirm_log"
+                android:icon="@drawable/log"
+                android:title="移動履歴確認" />
+            <item
+                android:id="@+id/nav_setting"
+                android:icon="@drawable/ic_menu_manage"
+                android:title="設定" />
+            <item
+                android:id="@+id/nav_child_setting"
+                android:icon="@drawable/child_setting"
+                android:title="子機の設定" />
+            <item
+                android:id="@+id/nav_setting_receive"
+                android:icon="@drawable/child_setting"
+                android:title="設定の受信" />
+            <item
+                android:id="@+id/nav_download_map"
+                android:icon="@drawable/map"
+                android:title="地図の保存"
+                />
+            <item
+                android:id="@+id/nav_open_map"
+                android:icon="@drawable/map"
+                android:title="地図を開く"
+                />
+            <item
+                android:id="@+id/nav_upload_data"
+                android:icon="@drawable/child_setting"
+                android:title="履歴アップロード"
+                />
+            <item
+                android:id="@+id/nav_help"
+                android:icon="@drawable/help"
+                android:title="ヘルプ"
+                />
+        </group>
+    </group>
+
+</menu>
