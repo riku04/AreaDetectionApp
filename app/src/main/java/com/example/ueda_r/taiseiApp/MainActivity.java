@@ -14,8 +14,10 @@ import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.hardware.usb.UsbDeviceConnection;
@@ -68,6 +70,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -100,6 +104,7 @@ import com.hoho.android.usbserial.util.SerialInputOutputManager;
 
 import org.mapsforge.map.android.rendertheme.AssetsRenderTheme;
 import org.mapsforge.map.rendertheme.XmlRenderTheme;
+import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.bonuspack.location.GeocoderNominatim;
 import org.osmdroid.config.Configuration;
@@ -194,7 +199,15 @@ public class MainActivity extends AppCompatActivity
     protected enum LogMarker {
         MARKER_START,
         MARKER_END,
-        MARKER_POINT
+        MARKER_POINT,
+        MARKER_POINT_OUTSIDE,
+        MARKER_POINT_CLOSE,
+        MARKER_POINT_INSIDE,
+        MARKER_WALK,
+        MARKER_OUTSIDE,
+        MARKER_SEMI_CLOSE,
+        MARKER_CLOSE,
+        MARKER_INSIDE
     }
 
     protected enum Clockwise {
@@ -222,6 +235,8 @@ public class MainActivity extends AppCompatActivity
     private LinearLayout alertLayout;
     private Button logRemoveButton;
 
+    private Button debugButtonPlus;
+
     final static boolean USB_ENABLE = true;
     final static boolean USB_ONLY_OUTPUT = true;
 
@@ -234,6 +249,108 @@ public class MainActivity extends AppCompatActivity
 
     private ProgressDialog progressDialog;
     private BleFileExplorer bleFileExplorer;
+
+    FloatingActionButton fabSetMarker;
+    FloatingActionButton fabUndo;
+    FloatingActionButton fabNowLocation;
+
+    enum LogPlayMode {
+        LOG_PLAY_1x,
+        LOG_PLAY_2x,
+        LOG_PLAY_10x,
+        LOG_PLAY_MINUS_1x,
+        LOG_PLAY_MINUS_2x,
+        LOG_PLAY_MINUS_10x
+    }
+    private LogPlayMode logPlayMode = LogPlayMode.LOG_PLAY_1x;
+    private RelativeLayout logPlayLayout;
+    private TextView logPlayCurrentTimeText;
+    private TextView logPlayTotalTimeText;
+    private SeekBar logPLaySeekBar;
+    private TextView logPlayModeText;
+    private FloatingActionButton logPlayToggleFab;
+    private FloatingActionButton logPlayNextFab;
+    private FloatingActionButton logPlayPreviousFab;
+    private boolean isPlayingLog = false;
+    final Handler logPlayHandler = new Handler();
+    final Runnable logPLayRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (logPlayMode == LogPlayMode.LOG_PLAY_1x || logPlayMode == LogPlayMode.LOG_PLAY_2x || logPlayMode == LogPlayMode.LOG_PLAY_10x) {
+                if (locationLogger.getNextPoint() == null) {
+                    logPlayToggleFab.setBackgroundColor(getResources().getColor(R.color.colorAccent));
+                    logPlayToggleFab.setImageResource(android.R.drawable.ic_media_play);
+                    logPlayHandler.removeCallbacks(this);
+                    isPlayingLog = false;
+                    return;
+                }
+                int second = locationLogger.drawNextPoint().locationDate.getTimeInSec();
+                if (locationLogger.getNextPoint() == null) {
+                    logPlayToggleFab.setBackgroundColor(getResources().getColor(R.color.colorAccent));
+                    logPlayToggleFab.setImageResource(android.R.drawable.ic_media_play);
+                    logPlayHandler.removeCallbacks(this);
+                    isPlayingLog = false;
+                    return;
+                }
+                int nextSecond = locationLogger.getNextPoint().locationDate.getTimeInSec();
+                int delay = (nextSecond - second) * 1000;
+                if (delay <= 0) {
+                    delay = 1;
+                }
+                switch (logPlayMode) {
+                    case LOG_PLAY_1x:
+                        delay = delay / 1;
+                        break;
+                    case LOG_PLAY_2x:
+                        delay = delay / 2;
+                        break;
+                    case LOG_PLAY_10x:
+                        delay = delay / 10;
+                    default:
+                        break;
+                }
+                logPlayHandler.postDelayed(this, delay);
+
+            } else if (logPlayMode == LogPlayMode.LOG_PLAY_MINUS_1x || logPlayMode == LogPlayMode.LOG_PLAY_MINUS_2x || logPlayMode == LogPlayMode.LOG_PLAY_MINUS_10x) {
+                if (locationLogger.getPreviousPoint() == null) {
+                    logPlayToggleFab.setBackgroundColor(getResources().getColor(R.color.colorAccent));
+                    logPlayToggleFab.setImageResource(android.R.drawable.ic_media_play);
+                    logPlayHandler.removeCallbacks(this);
+                    isPlayingLog = false;
+                    return;
+                }
+                int second = locationLogger.drawPrevioutPoint().locationDate.getTimeInSec();
+                if (locationLogger.getPreviousPoint() == null) {
+                    logPlayToggleFab.setBackgroundColor(getResources().getColor(R.color.colorAccent));
+                    logPlayToggleFab.setImageResource(android.R.drawable.ic_media_play);
+                    logPlayHandler.removeCallbacks(this);
+                    isPlayingLog = false;
+                    return;
+                }
+                int previousSecond = locationLogger.getPreviousPoint().locationDate.getTimeInSec();
+
+                int delay = (second - previousSecond) * 1000;
+                if (delay <= 0) {
+                    delay = 1;
+                }
+                switch (logPlayMode) {
+                    case LOG_PLAY_MINUS_1x:
+                        delay = delay / 1;
+                        break;
+                    case LOG_PLAY_MINUS_2x:
+                        delay = delay / 2;
+                        break;
+                    case LOG_PLAY_MINUS_10x:
+                        delay = delay / 10;
+                    default:
+                        break;
+                }
+                logPlayHandler.postDelayed(this, delay);
+            }
+        }
+    };
+
+
 
     public void requestReadWritePermission() {
         if (Build.VERSION.SDK_INT >= 23) {
@@ -321,6 +438,33 @@ public class MainActivity extends AppCompatActivity
 
         float batteryPct = (level / (float) scale) * 100;
         return  (int)batteryPct;
+    }
+
+    private MotionEvent event;
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+
+        Log.d("TouchEvent", "X:" + event.getX() + ",Y:" + event.getY());
+
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                this.event = event;
+                Log.d("TouchEvent", "getAction()" + "ACTION_DOWN");
+                break;
+            case MotionEvent.ACTION_UP:
+                this.event = event;
+                Log.d("TouchEvent", "getAction()" + "ACTION_UP");
+                break;
+            case MotionEvent.ACTION_MOVE:
+                this.event = event;
+                Log.d("TouchEvent", "getAction()" + "ACTION_MOVE");
+                break;
+            case MotionEvent.ACTION_CANCEL:
+                this.event = event;
+                Log.d("TouchEvent", "getAction()" + "ACTION_CANCEL");
+                break;
+        }
+        return true;
     }
 
     @Override
@@ -471,7 +615,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        FloatingActionButton fabSetMarker = (FloatingActionButton) findViewById(R.id.fab_SetMarker);
+        fabSetMarker = (FloatingActionButton) findViewById(R.id.fab_SetMarker);
         fabSetMarker.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -513,7 +657,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        FloatingActionButton fabUndo = (FloatingActionButton) findViewById(R.id.fab_Undo);
+        fabUndo = (FloatingActionButton) findViewById(R.id.fab_Undo);
         fabUndo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -524,7 +668,7 @@ public class MainActivity extends AppCompatActivity
         final ProgressBar calcProgress = findViewById(R.id.calculateGpsProgress);
         calcProgress.setVisibility(ProgressBar.INVISIBLE);
 
-        final FloatingActionButton fabNowLocation = (FloatingActionButton) findViewById(R.id.fab_NowLocation);
+        fabNowLocation = (FloatingActionButton) findViewById(R.id.fab_NowLocation);
         fabNowLocation.setOnClickListener(new View.OnClickListener() {
             Boolean isLocationCalculated = false;
 
@@ -631,12 +775,41 @@ public class MainActivity extends AppCompatActivity
         logRemoveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (isPlayingLog && (logPlayHandler != null) && (logPLayRunnable != null)) {
+                    logPlayHandler.removeCallbacks(logPLayRunnable);
+                }
+                targetIconFadein();
+
+                logPlayToggleFab.setBackgroundColor(getResources().getColor(R.color.colorAccent));
+                logPlayToggleFab.setImageResource(android.R.drawable.ic_media_play);
+                //logPlayHandler.removeCallbacks(logPLayRunnable);
+                isPlayingLog = false;
+
                 locationLogger.removeLogLine();
                 locationLogger.removeLogArea();
                 logRemoveButton.setVisibility(View.INVISIBLE);
+                logPlayLayout.setVisibility(View.INVISIBLE);
+
+                fabSetMarker.setVisibility(View.VISIBLE);
+                fabUndo.setVisibility(View.VISIBLE);
+                fabNowLocation.setVisibility(View.VISIBLE);
             }
         });
         logRemoveButton.setVisibility(View.INVISIBLE);
+
+        /////////////////////////////////////////////////////////////////////
+        debugButtonPlus = findViewById(R.id.debugButtonPlus);
+        debugButtonPlus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                IGeoPoint point = mMapView.getMapCenter();
+                Location location = new Location("dummy");
+                location.setLatitude(point.getLatitude());
+                location.setLongitude(point.getLongitude());
+                locationService.gpsChanged(location);
+            }
+        });
+        /////////////////////////////////////////////////////////////////////
 
         int x = getResources().getDisplayMetrics().widthPixels / 15;
         int y = getResources().getDisplayMetrics().heightPixels / 7;
@@ -651,6 +824,121 @@ public class MainActivity extends AppCompatActivity
         mMapView.getOverlays().add(copyrightOverlay);
         x = getResources().getDisplayMetrics().widthPixels / 2 - 40;
         copyrightOverlay.setOffset(x, 5);
+
+        logPlayLayout = findViewById(R.id.logPlayLayout);
+        logPLaySeekBar = findViewById(R.id.logPlaySeekBar);
+        logPlayModeText = findViewById(R.id.logPlayModeText);
+        logPlayCurrentTimeText = findViewById(R.id.logPlayCurrentTimeText);
+        logPlayTotalTimeText = findViewById(R.id.logPlayTotalTimeText);
+        logPlayToggleFab = findViewById(R.id.logPlayToggle);
+        logPlayNextFab = findViewById(R.id.logPlayNext);
+        logPlayPreviousFab = findViewById(R.id.logPlayPrevious);
+
+        logPLaySeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                locationLogger.drawSeekedPoint(progress).locationDate.getTimeString();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+
+        logPlayToggleFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!isPlayingLog) {
+                    logPlayToggleFab.setBackgroundColor(Color.GRAY);
+                    logPlayToggleFab.setImageResource(android.R.drawable.ic_media_pause);
+                    logPlayToggleFab.invalidate();
+                    logPlayHandler.post(logPLayRunnable);
+                    isPlayingLog = true;
+                } else {
+                    logPlayToggleFab.setBackgroundColor(accent);
+                    logPlayToggleFab.setImageResource(android.R.drawable.ic_media_play);
+                    logPlayToggleFab.invalidate();
+                    logPlayHandler.removeCallbacks(logPLayRunnable);
+                    isPlayingLog = false;
+                }
+            }
+        });
+
+        logPlayNextFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //locationLogger.drawNextPoint();
+                if (!isPlayingLog) {
+                    //return;
+                }
+                switch (logPlayMode){
+                    case LOG_PLAY_1x:
+                        logPlayMode = LogPlayMode.LOG_PLAY_2x;
+                        logPlayModeText.setText("2x");
+                        break;
+                    case LOG_PLAY_2x:
+                        logPlayMode = LogPlayMode.LOG_PLAY_10x;
+                        logPlayModeText.setText("10x");
+                        break;
+                    case LOG_PLAY_MINUS_1x:
+                        logPlayMode= LogPlayMode.LOG_PLAY_1x;
+                        logPlayModeText.setText("1x");
+                        break;
+                    case LOG_PLAY_MINUS_2x:
+                        logPlayMode = LogPlayMode.LOG_PLAY_MINUS_1x;
+                        logPlayModeText.setText("-1x");
+                        break;
+                    case LOG_PLAY_MINUS_10x:
+                        logPlayMode = LogPlayMode.LOG_PLAY_MINUS_2x;
+                        logPlayModeText.setText("-2x");
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+
+        logPlayPreviousFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //locationLogger.drawPrevioutPoint();
+                if (!isPlayingLog) {
+                    //return;
+                }
+                switch (logPlayMode){
+                    case LOG_PLAY_1x:
+                        logPlayMode = LogPlayMode.LOG_PLAY_MINUS_1x;
+                        logPlayModeText.setText("-1x");
+                        break;
+                    case LOG_PLAY_2x:
+                        logPlayMode = LogPlayMode.LOG_PLAY_1x;
+                        logPlayModeText.setText("1x");
+                        break;
+                    case LOG_PLAY_10x:
+                        logPlayMode = LogPlayMode.LOG_PLAY_2x;
+                        logPlayModeText.setText("2x");
+                        break;
+                    case LOG_PLAY_MINUS_1x:
+                        logPlayMode= LogPlayMode.LOG_PLAY_MINUS_2x;
+                        logPlayModeText.setText("-2x");
+                        break;
+                    case LOG_PLAY_MINUS_2x:
+                        logPlayMode = LogPlayMode.LOG_PLAY_MINUS_10x;
+                        logPlayModeText.setText("-10x");
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+
 
         initFragments();
     }
@@ -794,12 +1082,12 @@ public class MainActivity extends AppCompatActivity
 
         if (USB_ENABLE) {
             if (MainActivity.USB_ONLY_OUTPUT) {
-                showAlertMessage(true, "USB_ONLY_MODE_ON");
+                //showAlertMessage(true, "USB_ONLY_MODE_ON");
             }
             UsbManager manager = (UsbManager) getSystemService(Context.USB_SERVICE);
             List<UsbSerialDriver> availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(manager);
             if (availableDrivers.isEmpty()) {
-                Toast.makeText(MainActivity.this, "available driver empty", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(MainActivity.this, "available driver empty", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -844,7 +1132,7 @@ public class MainActivity extends AppCompatActivity
     public void onStart() {
         super.onStart();
         int battery = getBatteryPercent();
-        if (battery < 50) {
+        if (battery < 30) {
             //showAlertMessage(true, "バッテリー残量低下 : " + battery + "%" + "\r\n記録中に電源が落ちる可能性があります");
         }
         Log.i("LocationService", "Bind on [MainActivity]");
@@ -962,6 +1250,7 @@ public class MainActivity extends AppCompatActivity
 
             case read_history:
                 transaction.replace(R.id.fragment, readHistoryFragment);
+
                 break;
 
             case setting:
@@ -2682,8 +2971,50 @@ public class MainActivity extends AppCompatActivity
 
         private String getString() {
             String string = "";
-            string = Integer.toString(year) + "/" + Integer.toString(month) + "/" + Integer.toString(day) + "\r\n" + Integer.toString(hour) + ":" + Integer.toString(minute) + ":" + Integer.toString(second);
+            string += year + "/";
+            string += month + "/";
+            string += day + " ";
+            if (hour < 10) {
+                string += "0" + hour + ":";
+            } else {
+                string += hour + ":";
+            }
+            if (minute < 10) {
+                string += "0" + minute + ":";
+            } else {
+                string += minute + ":";
+            }
+            if (second < 10) {
+                string += "0" + second;
+            } else {
+                string += second;
+            }
             return string;
+        }
+
+        private String getTimeString() {
+            String string = "";
+            if (hour < 10) {
+                string += "0" + hour + ":";
+            } else {
+                string += hour + ":";
+            }
+            if (minute < 10) {
+                string += "0" + minute + ":";
+            } else {
+                string += minute + ":";
+            }
+            if (second < 10) {
+                string += "0" + second;
+            } else {
+                string += second;
+            }
+            return string;
+        }
+
+        private int getTimeInSec() {
+            int sec = second + minute * 60 + hour * 60 * 60;
+            return sec;
         }
     }
 
@@ -2699,6 +3030,7 @@ public class MainActivity extends AppCompatActivity
             this.longitude = lon;
             this.locationStatus = locationStatus;
         }
+
     }
 
     public class LocationLogger {
@@ -2708,6 +3040,9 @@ public class MainActivity extends AppCompatActivity
         private ArrayList<Marker> logMarker = new ArrayList<>();
         private List<Polygon> polygons = new ArrayList<>();
         private List<Polygon> exPolygons = new ArrayList<>();
+
+        private List<LogData> logDataList = new ArrayList<>();
+        private List<LogData> drawnLogDataList = new ArrayList<>();
 
         LocationLogger() {
             logList = new ArrayList<>();
@@ -2722,10 +3057,8 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-        private void drawLogLine(ArrayList<LogData> logList) {
-//            mMapView.getOverlayManager().remove(logLine);
-//            mMapView.getOverlayManager().removeAll(logMarker);
-            ArrayList<GeoPoint> geoPointList = new ArrayList<>();
+        private void drawLogLine(List<LogData> logList) {
+            List<GeoPoint> geoPointList = new ArrayList<>();
             for (int logDataNum = 0; logDataNum <= logList.size() - 1; logDataNum++) {
                 GeoPoint geoPoint = new GeoPoint(logList.get(logDataNum).latitude, logList.get(logDataNum).longitude);
                 geoPointList.add(geoPoint);
@@ -2754,6 +3087,177 @@ public class MainActivity extends AppCompatActivity
             mMapView.invalidate();
             IMapController mapController = mMapView.getController();
             mapController.animateTo(new GeoPoint(logList.get(0).latitude, logList.get(0).longitude));
+        }
+
+        private LogData drawLogLineWithStatusMarker(List<LogData> logList) {
+            List<GeoPoint> points = new ArrayList<>();
+            for (int dataNum = 0; dataNum <= logList.size() - 1; dataNum++) {
+                points.add(new GeoPoint(logList.get(dataNum).latitude, logList.get(dataNum).longitude));
+            }
+            logLine.setPoints(points);
+            logLine.setColor(getResources().getColor(R.color.Orange));
+            logLine.setWidth(6F);
+            mMapView.getOverlayManager().add(logLine);
+
+            for (int dataNum = 0; dataNum <= logList.size() - 1; dataNum++) {
+                GeoPoint point = new GeoPoint(logList.get(dataNum).latitude, logList.get(dataNum).longitude);
+                switch (logList.get(dataNum).locationStatus) {
+                    case OUTSIDE:
+                        logMarker.add(setLogMarker(point, LogMarker.MARKER_POINT_OUTSIDE, logList.get(dataNum).locationDate.getString()));
+                        if (dataNum == logList.size() - 1) {
+                            logMarker.add(setLogMarker(point, LogMarker.MARKER_OUTSIDE, logList.get(dataNum).locationDate.getString()));
+                        }
+                        break;
+                    case SEMI_CLOSE:
+                        logMarker.add(setLogMarker(point, LogMarker.MARKER_POINT_OUTSIDE, logList.get(dataNum).locationDate.getString()));
+                        if (dataNum == logList.size() - 1) {
+                            logMarker.add(setLogMarker(point, LogMarker.MARKER_OUTSIDE, logList.get(dataNum).locationDate.getString()));
+                        }
+                        break;
+                    case CLOSE:
+                        logMarker.add(setLogMarker(point, LogMarker.MARKER_POINT_CLOSE, logList.get(dataNum).locationDate.getString()));
+                        if (dataNum == logList.size() - 1) {
+                            logMarker.add(setLogMarker(point, LogMarker.MARKER_CLOSE, logList.get(dataNum).locationDate.getString()));
+                        }
+                        break;
+                    case INSIDE:
+                        logMarker.add(setLogMarker(point, LogMarker.MARKER_POINT_INSIDE, logList.get(dataNum).locationDate.getString()));
+                        if (dataNum == logList.size() - 1) {
+                            logMarker.add(setLogMarker(point, LogMarker.MARKER_INSIDE, logList.get(dataNum).locationDate.getString()));
+                        }
+                        break;
+                }
+            }
+            mMapView.invalidate();
+            IMapController mapController = mMapView.getController();
+            mapController.animateTo(new GeoPoint(logList.get(logList.size() - 1).latitude, logList.get(logList.size() - 1).longitude));
+            return logList.get(logList.size() - 1);
+        }
+
+        private LogData drawLogLineWithPersonMarker(List<LogData> logList) {
+            List<GeoPoint> geoPointList = new ArrayList<>();
+            for (int logDataNum = 0; logDataNum <= logList.size() - 1; logDataNum++) {
+                GeoPoint geoPoint = new GeoPoint(logList.get(logDataNum).latitude, logList.get(logDataNum).longitude);
+                geoPointList.add(geoPoint);
+                switch (logList.get(logDataNum).locationStatus) {
+                    case OUTSIDE:
+                        break;
+                    case SEMI_CLOSE:
+                        break;
+                    case CLOSE:
+                        break;
+                    case INSIDE:
+                        break;
+                }
+            }
+            logLine.setPoints(geoPointList);
+            logLine.setColor(Color.MAGENTA);
+            logLine.setWidth(6F);
+            mMapView.getOverlayManager().add(logLine);
+
+            for (int i = 0; i <= geoPointList.size() - 1; i++) {
+                logMarker.add(setLogMarker(geoPointList.get(i), LogMarker.MARKER_POINT, logList.get(i).locationDate.getString()));
+            }
+
+            switch (logList.get(logList.size() - 1).locationStatus) {
+                case OUTSIDE:
+                    logMarker.add(setLogMarker(geoPointList.get(geoPointList.size() - 1), LogMarker.MARKER_INSIDE, logList.get(logList.size() - 1).locationDate.getString()));
+                    break;
+                case SEMI_CLOSE:
+                    logMarker.add(setLogMarker(geoPointList.get(geoPointList.size() - 1), LogMarker.MARKER_OUTSIDE, logList.get(logList.size() - 1).locationDate.getString()));
+                    break;
+                case CLOSE:
+                    logMarker.add(setLogMarker(geoPointList.get(geoPointList.size() - 1), LogMarker.MARKER_CLOSE, logList.get(logList.size() - 1).locationDate.getString()));
+                    break;
+                case INSIDE:
+                    logMarker.add(setLogMarker(geoPointList.get(geoPointList.size() - 1), LogMarker.MARKER_INSIDE, logList.get(logList.size() - 1).locationDate.getString()));
+                    break;
+            }
+            //logMarker.add(setLogMarker(geoPointList.get(geoPointList.size() - 1), LogMarker.MARKER_END, logList.get(logList.size() - 1).locationDate.getString()));
+
+            mMapView.invalidate();
+            IMapController mapController = mMapView.getController();
+            //mapController.setZoom(22.0);
+            mapController.animateTo(new GeoPoint(logList.get(logList.size() - 1).latitude, logList.get(logList.size() - 1).longitude));
+            //mapController.animateTo(new GeoPoint(logList.get(logList.size() - 1).latitude, logList.get(logList.size() - 1).longitude), mMapView.getZoomLevelDouble(), (long) 1);
+            return logList.get(logList.size() - 1);
+        }
+
+
+        private void setLogline(ArrayList<LogData> logList) {
+            logDataList = logList;
+            drawnLogDataList.clear();
+            drawnLogDataList.add(logList.get(0));
+            removeLogLine();
+            //String currentTime = drawLogLineWithPersonMarker(drawnLogDataList).locationDate.getTimeString();
+            String currentTime = drawLogLineWithStatusMarker(drawnLogDataList).locationDate.getTimeString();
+
+            logPlayCurrentTimeText.setText(currentTime);
+        }
+
+        private LogData drawSeekedPoint(int logListNum){
+            if (logListNum <= logDataList.size() - 1) {
+                List<LogData> tempList = new ArrayList<>();
+                for (int i = 0; i <= logListNum; i++) {
+                    tempList.add(logDataList.get(i));
+                }
+                drawnLogDataList = new ArrayList<>(tempList);
+                removeLogLine();
+                //String currentTime = drawLogLineWithPersonMarker(drawnLogDataList).locationDate.getTimeString();
+                String currentTime  = drawLogLineWithStatusMarker(drawnLogDataList).locationDate.getTimeString();
+                logPlayCurrentTimeText.setText(currentTime);
+                return logDataList.get(logListNum);
+            } else {
+                return null;
+            }
+        }
+
+        private LogData getNextPoint() {
+            if (!logDataList.isEmpty() && (drawnLogDataList.size() <= logDataList.size())) {
+                LogData nextData = logDataList.get(drawnLogDataList.size() - 1);
+                return nextData;
+            } else {
+                return null;
+            }
+        }
+
+        private LogData getPreviousPoint() {
+            if (!drawnLogDataList.isEmpty() && (drawnLogDataList.size() >= 2)) {
+                LogData previousData = drawnLogDataList.get(drawnLogDataList.size() - 2);
+                return previousData;
+            } else {
+                return null;
+            }
+        }
+
+        private LogData drawNextPoint() {
+            if (!logDataList.isEmpty() && (drawnLogDataList.size() <= logDataList.size())) {
+                LogData drawnData = logDataList.get(drawnLogDataList.size()-1);
+                drawnLogDataList.add(drawnData);
+                removeLogLine();
+                //String currentTime = drawLogLineWithPersonMarker(drawnLogDataList).locationDate.getTimeString();
+                String currentTime  = drawLogLineWithStatusMarker(drawnLogDataList).locationDate.getTimeString();
+                logPlayCurrentTimeText.setText(currentTime);
+                logPLaySeekBar.incrementProgressBy(1);
+                return drawnData;
+            } else {
+                return null;
+            }
+        }
+
+        private LogData drawPrevioutPoint() {
+            if (!drawnLogDataList.isEmpty() && (drawnLogDataList.size() >= 2)) {
+                drawnLogDataList.remove(drawnLogDataList.size() - 1);
+                LogData previousData = drawnLogDataList.get(drawnLogDataList.size() - 1);
+                removeLogLine();
+                //String currentTime = drawLogLineWithPersonMarker(drawnLogDataList).locationDate.getTimeString();
+                String currentTime  = drawLogLineWithStatusMarker(drawnLogDataList).locationDate.getTimeString();
+                logPlayCurrentTimeText.setText(currentTime);
+                logPLaySeekBar.incrementProgressBy(-1);
+                return previousData;
+            } else {
+                return null;
+            }
         }
 
         private void removeLogArea() {
@@ -2827,6 +3331,14 @@ public class MainActivity extends AppCompatActivity
                     marker.setIcon(yellow);
                     marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
                     break;
+                case MARKER_WALK:
+                    Drawable walk = getResources().getDrawable(R.drawable.walk);
+                    bitmap = ((BitmapDrawable) walk).getBitmap();
+                    resizeBitmap = Bitmap.createScaledBitmap(bitmap, size / 2, size / 2, false);
+                    walk = new BitmapDrawable(getResources(), resizeBitmap);
+                    marker.setIcon(walk);
+                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
+                    break;
             }
             marker.setVisible(true);
             mMapView.getOverlays().add(marker);
@@ -2866,6 +3378,57 @@ public class MainActivity extends AppCompatActivity
                     yellow = new BitmapDrawable(getResources(), resizeBitmap);
                     marker.setIcon(yellow);
                     marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
+                    break;
+                case MARKER_POINT_OUTSIDE:
+                    Drawable outpoint = getResources().getDrawable(R.drawable.marker_point_outside);
+                    bitmap = ((BitmapDrawable) outpoint).getBitmap();
+                    resizeBitmap = Bitmap.createScaledBitmap(bitmap, size / 4, size / 4, false);
+                    outpoint = new BitmapDrawable(getResources(), resizeBitmap);
+                    marker.setIcon(outpoint);
+                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
+                    break;
+                case MARKER_POINT_CLOSE:
+                    Drawable closepoint = getResources().getDrawable(R.drawable.marker_point_close);
+                    bitmap = ((BitmapDrawable) closepoint).getBitmap();
+                    resizeBitmap = Bitmap.createScaledBitmap(bitmap, size / 4, size / 4, false);
+                    closepoint = new BitmapDrawable(getResources(), resizeBitmap);
+                    marker.setIcon(closepoint);
+                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
+                    break;
+                case MARKER_POINT_INSIDE:
+                    Drawable inpoint = getResources().getDrawable(R.drawable.marker_point_inside);
+                    bitmap = ((BitmapDrawable) inpoint).getBitmap();
+                    resizeBitmap = Bitmap.createScaledBitmap(bitmap, size / 4, size / 4, false);
+                    inpoint = new BitmapDrawable(getResources(), resizeBitmap);
+                    marker.setIcon(inpoint);
+                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
+                    break;
+                case MARKER_OUTSIDE:
+                    //Toast.makeText(MainActivity.this, "log_outside", Toast.LENGTH_SHORT).show();
+                    Drawable outside = getResources().getDrawable(R.drawable.marker_green);
+                    bitmap = ((BitmapDrawable) outside).getBitmap();
+                    resizeBitmap = Bitmap.createScaledBitmap(bitmap, size, size, false);
+                    outside = new BitmapDrawable(getResources(), resizeBitmap);
+                    marker.setIcon(outside);
+                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+                    break;
+                case MARKER_CLOSE:
+                    //Toast.makeText(MainActivity.this, "log_close", Toast.LENGTH_SHORT).show();
+                    Drawable close = getResources().getDrawable(R.drawable.marker_yellow);
+                    bitmap = ((BitmapDrawable) close).getBitmap();
+                    resizeBitmap = Bitmap.createScaledBitmap(bitmap, size, size, false);
+                    close = new BitmapDrawable(getResources(), resizeBitmap);
+                    marker.setIcon(close);
+                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+                    break;
+                case MARKER_INSIDE:
+                    //Toast.makeText(MainActivity.this, "log_inside", Toast.LENGTH_SHORT).show();
+                    Drawable inside = getResources().getDrawable(R.drawable.marker_red);
+                    bitmap = ((BitmapDrawable) inside).getBitmap();
+                    resizeBitmap = Bitmap.createScaledBitmap(bitmap, size, size, false);
+                    inside = new BitmapDrawable(getResources(), resizeBitmap);
+                    marker.setIcon(inside);
+                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
                     break;
             }
             marker.setVisible(true);
@@ -2933,9 +3496,9 @@ public class MainActivity extends AppCompatActivity
         private int closeDistance = 10;
         private int jukiDistance = 10;
 
-        private int normalLogIntvl = 10;    //通常時記録間隔
-        private int semiCloseLogIntvl = 5; //準接近時記録間隔
-        private int closeLogIntvl = 3;  //接近時記録間隔
+        private int normalLogIntvl = 5;    //通常時記録間隔
+        private int semiCloseLogIntvl = 3; //準接近時記録間隔
+        private int closeLogIntvl = 1;  //接近時記録間隔
         private int enterLogIntvl = 1;  //進入時記録間隔
         private int jukiCloseLogIntvl = 3;  //重機接近時記録間隔
         private int jukiQty = 0;    //重機数
@@ -3684,6 +4247,7 @@ public class MainActivity extends AppCompatActivity
 
             fileReader.close();
             bufferedReader.close();
+            bufferedReader.close();
 
             locationLogger.removeLogLine();
             locationLogger.removeLogArea();
@@ -3712,6 +4276,118 @@ public class MainActivity extends AppCompatActivity
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public void playHistoryDataCsv(String filename) {
+        targetIconFadeout();
+
+        fabSetMarker.setVisibility(View.INVISIBLE);
+        fabUndo.setVisibility(View.INVISIBLE);
+        fabNowLocation.setVisibility(View.INVISIBLE);
+
+        logPlayLayout.setVisibility(View.VISIBLE);
+        logPlayLayout.setBackgroundTintMode(PorterDuff.Mode.ADD);
+        logPlayLayout.setBackgroundColor(getResources().getColor(R.color.LightGoldenrodYellow));
+
+        logPlayToggleFab.setVisibility(View.VISIBLE);
+        logPlayNextFab.setVisibility(View.VISIBLE);
+        logPlayPreviousFab.setVisibility(View.VISIBLE);
+
+        Integer closeDistance = 0;
+        ArrayList<ArrayList<GeoPoint>> areaPointsList = new ArrayList<>();
+        ArrayList<LogData> logDataList = new ArrayList<>();
+        String dateString = "";
+        dateString = filename;
+
+        try {
+            File file = new File(PATH_MAIN_DIRECTORY + "/" + filename);
+            FileReader fileReader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+            String line = "";   //Approach Distance[m]
+            line = bufferedReader.readLine();
+            closeDistance = Integer.parseInt(bufferedReader.readLine());
+
+            line = bufferedReader.readLine();   //Area Coordinates[dig.]
+            int areaNum = 0;
+            while (!(line = bufferedReader.readLine()).contains("Date")) {
+                areaPointsList.add(new ArrayList<GeoPoint>());
+                String[] areaPoints = line.split(",");
+                for (int num = 0; num <= (areaPoints.length / 2) - 1; num++) {
+                    Double lat = Double.parseDouble(areaPoints[num * 2]);
+                    Double lon = Double.parseDouble(areaPoints[num * 2 + 1]);
+                    areaPointsList.get(areaNum).add(new GeoPoint(lat, lon));
+                }
+                areaNum++;
+            }
+
+            line = bufferedReader.readLine();   //Date,Time,Latitude[dig.],Longitude[dig.],Status
+            while ((line = bufferedReader.readLine()) != null) {
+                String logLine[] = line.split(",");
+                String date[] = logLine[0].split("/");
+                String time[] = logLine[1].split(":");
+                int year = Integer.parseInt(date[0]);
+                int month = Integer.parseInt(date[1]);
+                int day = Integer.parseInt(date[2]);
+                int hour = Integer.parseInt(time[0]);
+                int minute = Integer.parseInt(time[1]);
+                int second = Integer.parseInt(time[2]);
+                Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Tokyo"), Locale.JAPAN);
+                calendar.set(year, month, day, hour, minute, second);
+
+                Double lat = Double.parseDouble(logLine[2]);
+                Double lon = Double.parseDouble(logLine[3]);
+
+                int status = Integer.parseInt(logLine[4]);
+                LocationStatus locationStatus = LocationStatus.OUTSIDE;
+                switch (status) {
+                    case 0:
+                        locationStatus = LocationStatus.OUTSIDE;
+                        break;
+                    case 1:
+                        locationStatus = LocationStatus.SEMI_CLOSE;
+                        break;
+                    case 2:
+                        locationStatus = LocationStatus.CLOSE;
+                        break;
+                    case 3:
+                        locationStatus = LocationStatus.INSIDE;
+                        break;
+                }
+                logDataList.add(new LogData(calendar, lat, lon, locationStatus));
+            }
+            fileReader.close();
+            bufferedReader.close();
+            bufferedReader.close();
+
+
+            locationLogger.removeLogLine();
+            locationLogger.removeLogArea();
+
+            locationLogger.drawLogArea(areaPointsList);
+
+            logPlayMode = LogPlayMode.LOG_PLAY_1x;
+            logPlayModeText.setText("1x");
+
+            logPLaySeekBar.setProgress(0);
+            locationLogger.setLogline(logDataList);
+
+            logPLaySeekBar.setMin(0);
+            logPLaySeekBar.setMax(logDataList.size() - 1);
+            logPlayCurrentTimeText.setText(logDataList.get(0).locationDate.getTimeString());
+            logPlayTotalTimeText.setText(logDataList.get(logDataList.size() - 1).locationDate.getTimeString());
+
+            logPLaySeekBar.invalidate();
+            logPlayCurrentTimeText.invalidate();
+            logPlayTotalTimeText.invalidate();
+
+            logRemoveButton.setText(dateString);
+            logRemoveButton.setBackgroundColor(getResources().getColor(R.color.LightGoldenrodYellow));
+            logRemoveButton.setVisibility(View.VISIBLE);
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

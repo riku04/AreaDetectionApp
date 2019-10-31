@@ -208,7 +208,8 @@ public class ReadHistoryFragment extends Fragment implements View.OnClickListene
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         String string = filename;
-                        callback.readHistoryDataCsv(filename);
+                        //callback.readHistoryDataCsv(filename);
+                        callback.playHistoryDataCsv(filename);
                         removeThisFragmentWithoutOpenDrawer();
                     }
                 })
@@ -245,6 +246,7 @@ public class ReadHistoryFragment extends Fragment implements View.OnClickListene
     }
 
     interface ReadHistoryFragmentCallback {
+        void playHistoryDataCsv(String filename);
         void readHistoryDataCsv(String filename);
         void deleteHistoryDataCsv(String filename);
     }

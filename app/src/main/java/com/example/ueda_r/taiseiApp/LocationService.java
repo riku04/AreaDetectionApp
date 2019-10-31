@@ -108,7 +108,7 @@ public class LocationService extends Service implements LocationListener {
     private int intervalCounter = 0;
     private LocationStatus lastStatus = LocationStatus.OUTSIDE;
     private LocationStatus currentStatus = LocationStatus.OUTSIDE;
-    final static int COUNTER_THRESHOLD = 2;
+    final static int COUNTER_THRESHOLD = 0;
 
     private AudioAttributes audioAttributes;
     private SoundPool soundPool;
@@ -487,21 +487,25 @@ public class LocationService extends Service implements LocationListener {
         if (intervalCounter >= COUNTER_THRESHOLD) {
             currentStatus = status;
             switch (status) {
-                case INSIDE:
-                    Log.i("LocationService", "status changed => INSIDE");
-                    changeGPS(parameter.enterLogIntvl, 1);
-                    break;
-                case CLOSE:
-                    Log.i("LocationService", "status changed => CLOSE");
-                    changeGPS(parameter.closeLogIntvl, 1);
+                case OUTSIDE:
+                    serviceCallback.showAlertMessage(true,"OUTSIDE");
+                    Log.i("LocationService", "status changed => OUTSIDE");
+                    changeGPS(parameter.normalLogIntvl, 1);
                     break;
                 case SEMI_CLOSE:
+                    serviceCallback.showAlertMessage(true,"SEMI");
                     Log.i("LocationService", "status changed => SEMI-CLOSE");
                     changeGPS(parameter.semiCloseLogIntvl, 1);
                     break;
-                case OUTSIDE:
-                    Log.i("LocationService", "status changed => OUTSIDE");
-                    changeGPS(parameter.normalLogIntvl, 1);
+                case CLOSE:
+                    serviceCallback.showAlertMessage(true,"CLOSE");
+                    Log.i("LocationService", "status changed => CLOSE");
+                    changeGPS(parameter.closeLogIntvl, 1);
+                    break;
+                case INSIDE:
+                    serviceCallback.showAlertMessage(true,"INSIDE");
+                    Log.i("LocationService", "status changed => INSIDE");
+                    changeGPS(parameter.enterLogIntvl, 1);
                     break;
                 default:
                     break;
@@ -569,7 +573,7 @@ public class LocationService extends Service implements LocationListener {
     @Override
     public void onLocationChanged(Location location) {
         if (MainActivity.USB_ONLY_OUTPUT) {
-            return;
+            //return;
         }
 
         Date d = new Date(location.getTime());
@@ -860,9 +864,9 @@ public class LocationService extends Service implements LocationListener {
         private int closeDistance = 10;
         private int jukiDistance = 10;
 
-        private int normalLogIntvl = 10;    //通常時記録間隔
-        private int semiCloseLogIntvl = 5; //準接近時記録間隔
-        private int closeLogIntvl = 3;  //接近時記録間隔
+        private int normalLogIntvl = 5;    //通常時記録間隔
+        private int semiCloseLogIntvl = 3; //準接近時記録間隔
+        private int closeLogIntvl = 1;  //接近時記録間隔
         private int enterLogIntvl = 1;  //進入時記録間隔
         private int jukiCloseLogIntvl = 3;  //重機接近時記録間隔
         private int jukiQty = 0;    //重機数
