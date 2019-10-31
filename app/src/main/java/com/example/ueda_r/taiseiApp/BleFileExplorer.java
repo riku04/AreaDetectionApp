@@ -76,6 +76,8 @@ public class BleFileExplorer extends Fragment{
 
     private Fragment fragment;
 
+    private boolean dataSend = false;
+
     public interface BleFileExplorerCallback {
         void showBfeProgressDialog(Boolean enable, String message);
         void showBfeToast(String message);
@@ -283,6 +285,7 @@ public class BleFileExplorer extends Fragment{
                             data = new byte[]{0x00};
                             result[0] = RESULT_NAK;
                         }
+                        //dataSend = true;
                         sendVariableBytesUsingNotification(result, data);
                         break;
 
@@ -530,7 +533,7 @@ public class BleFileExplorer extends Fragment{
         return sum;
     }
 
-    private void sendVariableBytesUsingNotification(byte[] result, byte[] data) {
+    private void sendVariableBytesUsingNotification(byte[] result, final byte[] data) {
 
         final List<byte[]> splitSendData = new ArrayList<>();
 
@@ -580,11 +583,13 @@ public class BleFileExplorer extends Fragment{
                             public void run() {
                                 if (cnt < splitSendData.size()) {
                                     Log.d("BLE", Double.toString(size += splitSendData.get(cnt).length) + " [bytes]");
+//                                    if(!(dataSend&&(cnt>=2))){
+//                                    }
                                     btGattCharacteristic.setValue(splitSendData.get(cnt));
                                     btGattServer.notifyCharacteristicChanged(connectedDevice, btGattCharacteristic, false);
                                     cnt++;
                                 }
-                                handler.postDelayed(this, 300);
+                                handler.postDelayed(this, 10);
                             }
                         };
                         handler.post(r);

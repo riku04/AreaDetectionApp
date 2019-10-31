@@ -88,7 +88,7 @@ public class LocationService extends Service implements LocationListener {
     private LocationManager locationManager;
     private Context context;
 
-    private static final int MinTime = 5 * 1000;
+    private static final int MinTime = 1 * 1000;
     private static final float MinDistance = 0;
 
     private static final int AlertInterval = 1000;
@@ -109,6 +109,8 @@ public class LocationService extends Service implements LocationListener {
     private LocationStatus lastStatus = LocationStatus.OUTSIDE;
     private LocationStatus currentStatus = LocationStatus.OUTSIDE;
     final static int COUNTER_THRESHOLD = 0;
+
+    private double lastGpsChangeTimeMillis = 0.0;
 
     private AudioAttributes audioAttributes;
     private SoundPool soundPool;
@@ -474,6 +476,45 @@ public class LocationService extends Service implements LocationListener {
         }
     }
 
+    private boolean hasEnoughInterval(LocationStatus status) {
+        boolean bool = false;
+        double currentTimeMillis = System.currentTimeMillis();
+        double duration = currentTimeMillis - lastGpsChangeTimeMillis;
+        if (lastGpsChangeTimeMillis == 0.0) {
+            status = LocationStatus.OUTSIDE;
+            duration = 100 * 1000;
+        }
+        switch (status) {
+            case OUTSIDE:
+                if (duration >= parameter.normalLogIntvl * 1000) {
+                    bool = true;
+                    lastGpsChangeTimeMillis = currentTimeMillis;
+                }
+                break;
+            case SEMI_CLOSE:
+                if (duration >= parameter.semiCloseLogIntvl * 1000) {
+                    bool = true;
+                    lastGpsChangeTimeMillis = currentTimeMillis;
+                }
+                break;
+            case CLOSE:
+                if (duration >= parameter.closeLogIntvl * 1000) {
+
+                    bool = true;
+                    lastGpsChangeTimeMillis = currentTimeMillis;
+                }
+                break;
+            case INSIDE:
+                if (duration >= parameter.enterLogIntvl * 1000) {
+                    
+                    bool = true;
+                    lastGpsChangeTimeMillis = currentTimeMillis;
+                }
+                break;
+        }
+        return bool;
+    }
+
     private void intervalManager(LocationStatus status) {
         if ((status != currentStatus) && (status == lastStatus)) {
             intervalCounter++;
@@ -483,7 +524,6 @@ public class LocationService extends Service implements LocationListener {
             intervalCounter = 0;
             return;
         }
-
         if (intervalCounter >= COUNTER_THRESHOLD) {
             currentStatus = status;
             switch (status) {
@@ -575,7 +615,6 @@ public class LocationService extends Service implements LocationListener {
         if (MainActivity.USB_ONLY_OUTPUT) {
             //return;
         }
-
         Date d = new Date(location.getTime());
         SimpleDateFormat sdf = new SimpleDateFormat("dd:MM:yy");
         String sDate = sdf.format(d);
@@ -594,7 +633,6 @@ public class LocationService extends Service implements LocationListener {
         Integer areaNum = 99;
         if (dangerArea.isInsideDangerArea(lastPoint) != null) {
             status = LocationStatus.INSIDE;
-            Toast.makeText(context, "Inside", Toast.LENGTH_SHORT).show();
             Log.i("LocationService", "Status INSIDE");
 
             vibrate(300, 255);
@@ -604,82 +642,47 @@ public class LocationService extends Service implements LocationListener {
 
             logger.addLocationLog(calendar, lastPoint, status, areaNum);
             //locationLogger.addLog(calendar, lastPoint, status);
-            locationLogger.appendLog(calendar, lastPoint, status, MainActivity.PATH_MAIN_DIRECTORY, parameter.groupID + "_" + parameter.userID + "_" + locationLogger.createdTime + ".csv");
+            if (hasEnoughInterval(status)) {
+                Toast.makeText(context, "Inside", Toast.LENGTH_SHORT).show();
 
-        } else if (dangerArea.isInsideExpandedDangerArea(lastPoint) != null) {
-            status = LocationStatus.CLOSE;
-            Toast.makeText(context, "Inside Expanded", Toast.LENGTH_SHORT).show();
-            Log.i("LocationService", "Status CLOSE");
-            areaNum = dangerArea.isInsideExpandedDangerArea(lastPoint);
-
-            logger.addLocationLog(calendar, lastPoint, status, areaNum);
-            //locationLogger.addLog(calendar, lastPoint, status);
-            locationLogger.appendLog(calendar, lastPoint, status, MainActivity.PATH_MAIN_DIRECTORY, parameter.groupID + "_" + parameter.userID + "_" + locationLogger.createdTime + ".csv");
-
-
-        } else if (dangerArea.isInsideSemiExpandedDangerArea(lastPoint) != null) {
-            status = LocationStatus.SEMI_CLOSE;
-            Toast.makeText(context, "Inside Semi-Expanded", Toast.LENGTH_SHORT).show();
-            Log.i("LocationService", "Status Semi-CLOSE");
-            areaNum = dangerArea.isInsideSemiExpandedDangerArea(lastPoint);
-            logger.addLocationLog(calendar, lastPoint, status, areaNum);
-            //locationLogger.addLog(calendar, lastPoint, status);
-            locationLogger.appendLog(calendar, lastPoint, status, MainActivity.PATH_MAIN_DIRECTORY, parameter.groupID + "_" + parameter.userID + "_" + locationLogger.createdTime + ".csv");
-
-        } else {
-            status = LocationStatus.OUTSIDE;
-            Toast.makeText(context, "Outside", Toast.LENGTH_SHORT).show();
-            Log.i("LocationService", "Status OUTSIDE");
-            logger.addLocationLog(calendar, lastPoint, status, 99);
-            //locationLogger.addLog(calendar, lastPoint, status);
-            locationLogger.appendLog(calendar, lastPoint, status, MainActivity.PATH_MAIN_DIRECTORY, parameter.groupID + "_" + parameter.userID + "_" + locationLogger.createdTime + ".csv");
-        }
-
-        DateFormat df = new SimpleDateFormat("yyMMdd");
-        Date date = new Date(System.currentTimeMillis());
-        String ymd = df.format(date);
-        if (parameter.loggingOn) {
-
-            int year = logger.logList.get(0).locationDate.year - 2000;
-            String yearStr = Integer.toString(year);
-
-            int month = logger.logList.get(0).locationDate.month;
-            String monthStr = Integer.toString(month);
-            if (month <= 9) {
-                monthStr = "0" + monthStr;
+                locationLogger.appendLog(calendar, lastPoint, status, MainActivity.PATH_MAIN_DIRECTORY, parameter.groupID + "_" + parameter.userID + "_" + locationLogger.createdTime + ".csv");
             }
+            } else if (dangerArea.isInsideExpandedDangerArea(lastPoint) != null) {
+                status = LocationStatus.CLOSE;
+                Log.i("LocationService", "Status CLOSE");
+                areaNum = dangerArea.isInsideExpandedDangerArea(lastPoint);
 
-            int day = logger.logList.get(0).locationDate.day;
-            String dayStr = Integer.toString(day);
-            if (day <= 9) {
-                dayStr = "0" + dayStr;
+                logger.addLocationLog(calendar, lastPoint, status, areaNum);
+                //locationLogger.addLog(calendar, lastPoint, status);
+                if (hasEnoughInterval(status)) {
+                    Toast.makeText(context, "Inside Expanded", Toast.LENGTH_SHORT).show();
+
+                    locationLogger.appendLog(calendar, lastPoint, status, MainActivity.PATH_MAIN_DIRECTORY, parameter.groupID + "_" + parameter.userID + "_" + locationLogger.createdTime + ".csv");
+                }
+
+            } else if (dangerArea.isInsideSemiExpandedDangerArea(lastPoint) != null) {
+                status = LocationStatus.SEMI_CLOSE;
+                Log.i("LocationService", "Status Semi-CLOSE");
+                areaNum = dangerArea.isInsideSemiExpandedDangerArea(lastPoint);
+                logger.addLocationLog(calendar, lastPoint, status, areaNum);
+                //locationLogger.addLog(calendar, lastPoint, status);
+                if (hasEnoughInterval(status)) {
+                    Toast.makeText(context, "Inside Semi-Expanded", Toast.LENGTH_SHORT).show();
+
+                    locationLogger.appendLog(calendar, lastPoint, status, MainActivity.PATH_MAIN_DIRECTORY, parameter.groupID + "_" + parameter.userID + "_" + locationLogger.createdTime + ".csv");
+                }
+            } else {
+                status = LocationStatus.OUTSIDE;
+                Log.i("LocationService", "Status OUTSIDE");
+                logger.addLocationLog(calendar, lastPoint, status, 99);
+                //locationLogger.addLog(calendar, lastPoint, status);
+                if (hasEnoughInterval(status)) {
+                    Toast.makeText(context, "Outside", Toast.LENGTH_SHORT).show();
+
+                    locationLogger.appendLog(calendar, lastPoint, status, MainActivity.PATH_MAIN_DIRECTORY, parameter.groupID + "_" + parameter.userID + "_" + locationLogger.createdTime + ".csv");
+                }
             }
-
-            int hour = logger.logList.get(0).locationDate.hour;
-            String hourStr = Integer.toString(hour);
-            if (hour <= 9) {
-                hourStr = "0" + hourStr;
-            }
-
-            int minute = logger.logList.get(0).locationDate.minute;
-            String minuteStr = Integer.toString(minute);
-
-            int second = logger.logList.get(0).locationDate.second;
-            String secondStr = Integer.toString(second);
-            if (second <= 9) {
-                secondStr = "0" + secondStr;
-            }
-
-            String dateString = yearStr + monthStr + dayStr + hourStr + minuteStr + secondStr;
-
-            dateString = getLoggingStartTimeString();//履歴保存開始時の時刻を使う
-
-            //logger.outputCsvLog(MainActivity.PATH_MAIN_DIRECTORY, parameter.groupID + "_" + parameter.userID + "_" + dateString + ".log");
-            //dangerArea.outputAreaData(MainActivity.PATH_MAIN_DIRECTORY, parameter.groupID + "_" + parameter.userID + "_" + dateString + ".area");
-
-            //locationLogger.outputLog(MainActivity.PATH_MAIN_DIRECTORY, parameter.groupID + "_" + parameter.userID + "_" + locationLogger.createdTime + ".csv");
-        }
-        intervalManager(status);
+        //intervalManager(status);
     }
 
     public void gpsChanged(Location location) {
