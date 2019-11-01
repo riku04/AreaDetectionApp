@@ -254,6 +254,10 @@ public class MainActivity extends AppCompatActivity
     FloatingActionButton fabUndo;
     FloatingActionButton fabNowLocation;
 
+    FloatingActionButton fabDetermineArea;
+    FloatingActionButton fabOpenDrawer;
+    com.robertlevonyan.views.customfloatingactionbutton.FloatingActionButton fabToggleLogging;
+
     enum LogPlayMode {
         LOG_PLAY_1x,
         LOG_PLAY_2x,
@@ -264,6 +268,7 @@ public class MainActivity extends AppCompatActivity
     }
     private LogPlayMode logPlayMode = LogPlayMode.LOG_PLAY_1x;
     private RelativeLayout logPlayLayout;
+    private TextView logPlayStatusText;
     private TextView logPlayCurrentTimeText;
     private TextView logPlayTotalTimeText;
     private SeekBar logPLaySeekBar;
@@ -729,7 +734,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        FloatingActionButton fabDetermineArea = (FloatingActionButton) findViewById(R.id.fab_AreaDetermine);
+        fabDetermineArea = (FloatingActionButton) findViewById(R.id.fab_AreaDetermine);
         fabDetermineArea.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -738,7 +743,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        FloatingActionButton fabOpenDrawer = (FloatingActionButton) findViewById(R.id.fab_OpenDrawer);
+        fabOpenDrawer = (FloatingActionButton) findViewById(R.id.fab_OpenDrawer);
         fabOpenDrawer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -749,7 +754,7 @@ public class MainActivity extends AppCompatActivity
         final int accent = fetchAccentColor();
         final int primary = fetchPrimaryColor();
 
-        final com.robertlevonyan.views.customfloatingactionbutton.FloatingActionButton fabToggleLogging = findViewById(R.id.fab_ToggleLogging);
+        fabToggleLogging = findViewById(R.id.fab_ToggleLogging);
         fabToggleLogging.setFabColor(primary);
         fabToggleLogging.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -789,10 +794,15 @@ public class MainActivity extends AppCompatActivity
                 locationLogger.removeLogArea();
                 logRemoveButton.setVisibility(View.INVISIBLE);
                 logPlayLayout.setVisibility(View.INVISIBLE);
+                logPlayStatusText.setVisibility(View.INVISIBLE);
 
                 fabSetMarker.setVisibility(View.VISIBLE);
                 fabUndo.setVisibility(View.VISIBLE);
                 fabNowLocation.setVisibility(View.VISIBLE);
+
+                fabOpenDrawer.setVisibility(View.VISIBLE);
+                fabDetermineArea.setVisibility(View.VISIBLE);
+                fabToggleLogging.setVisibility(View.VISIBLE);
             }
         });
         logRemoveButton.setVisibility(View.INVISIBLE);
@@ -827,6 +837,7 @@ public class MainActivity extends AppCompatActivity
 
         logPlayLayout = findViewById(R.id.logPlayLayout);
         logPLaySeekBar = findViewById(R.id.logPlaySeekBar);
+        logPlayStatusText = findViewById(R.id.logpLayStatusText);
         logPlayModeText = findViewById(R.id.logPlayModeText);
         logPlayCurrentTimeText = findViewById(R.id.logPlayCurrentTimeText);
         logPlayTotalTimeText = findViewById(R.id.logPlayTotalTimeText);
@@ -837,7 +848,26 @@ public class MainActivity extends AppCompatActivity
         logPLaySeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                locationLogger.drawSeekedPoint(progress).locationDate.getTimeString();
+                //locationLogger.drawSeekedPoint(progress).locationDate.getTimeString();
+                LogData logData = locationLogger.drawSeekedPoint(progress);
+                switch (logData.locationStatus) {
+                    case OUTSIDE:
+                        logPlayStatusText.setText("判定：禁止領域外");
+                        logPlayStatusText.setBackgroundColor(getResources().getColor(R.color.LawnGreen));
+                        break;
+                    case SEMI_CLOSE:
+                        logPlayStatusText.setText("判定：禁止領域外");
+                        logPlayStatusText.setBackgroundColor(getResources().getColor(R.color.LawnGreen));
+                        break;
+                    case CLOSE:
+                        logPlayStatusText.setText("判定：禁止領域接近");
+                        logPlayStatusText.setBackgroundColor(getResources().getColor(R.color.Yellow));
+                        break;
+                    case INSIDE:
+                        logPlayStatusText.setText("判定：禁止領域内");
+                        logPlayStatusText.setBackgroundColor(getResources().getColor(R.color.Red));
+                        break;
+                }
             }
 
             @Override
@@ -3089,6 +3119,21 @@ public class MainActivity extends AppCompatActivity
             mapController.animateTo(new GeoPoint(logList.get(0).latitude, logList.get(0).longitude));
         }
 
+        private Marker blinkMarker;
+        private Handler blinkMarkerHandler = new Handler();
+        private Runnable blinkMarkerRunnable = new Runnable() {
+            float alpha = 100;
+            @Override
+            public void run() {
+                blinkMarker.setAlpha(alpha);
+                alpha =-10;
+                if (alpha < 0) {
+                 alpha = 100;
+                }
+                blinkMarkerHandler.postDelayed(this,10);
+            }
+        };
+
         private LogData drawLogLineWithStatusMarker(List<LogData> logList) {
             List<GeoPoint> points = new ArrayList<>();
             for (int dataNum = 0; dataNum <= logList.size() - 1; dataNum++) {
@@ -3130,7 +3175,7 @@ public class MainActivity extends AppCompatActivity
             }
             mMapView.invalidate();
             IMapController mapController = mMapView.getController();
-            mapController.animateTo(new GeoPoint(logList.get(logList.size() - 1).latitude, logList.get(logList.size() - 1).longitude));
+            //mapController.animateTo(new GeoPoint(logList.get(logList.size() - 1).latitude, logList.get(logList.size() - 1).longitude));
             return logList.get(logList.size() - 1);
         }
 
@@ -4286,6 +4331,10 @@ public class MainActivity extends AppCompatActivity
         fabUndo.setVisibility(View.INVISIBLE);
         fabNowLocation.setVisibility(View.INVISIBLE);
 
+        fabOpenDrawer.setVisibility(View.INVISIBLE);
+        fabDetermineArea.setVisibility(View.INVISIBLE);
+        fabToggleLogging.setVisibility(View.INVISIBLE);
+
         logPlayLayout.setVisibility(View.VISIBLE);
         logPlayLayout.setBackgroundTintMode(PorterDuff.Mode.ADD);
         logPlayLayout.setBackgroundColor(getResources().getColor(R.color.LightGoldenrodYellow));
@@ -4293,6 +4342,12 @@ public class MainActivity extends AppCompatActivity
         logPlayToggleFab.setVisibility(View.VISIBLE);
         logPlayNextFab.setVisibility(View.VISIBLE);
         logPlayPreviousFab.setVisibility(View.VISIBLE);
+
+        logPlayStatusText.setVisibility(View.VISIBLE);
+
+        logRemoveButton.setText(filename);
+        logRemoveButton.setBackgroundColor(getResources().getColor(R.color.LightGoldenrodYellow));
+        logRemoveButton.setVisibility(View.VISIBLE);
 
         Integer closeDistance = 0;
         ArrayList<ArrayList<GeoPoint>> areaPointsList = new ArrayList<>();
@@ -4339,6 +4394,7 @@ public class MainActivity extends AppCompatActivity
                 Double lat = Double.parseDouble(logLine[2]);
                 Double lon = Double.parseDouble(logLine[3]);
 
+
                 int status = Integer.parseInt(logLine[4]);
                 LocationStatus locationStatus = LocationStatus.OUTSIDE;
                 switch (status) {
@@ -4367,6 +4423,8 @@ public class MainActivity extends AppCompatActivity
 
             locationLogger.drawLogArea(areaPointsList);
 
+            mMapView.getController().animateTo(areaPointsList.get(0).get(0));
+
             logPlayMode = LogPlayMode.LOG_PLAY_1x;
             logPlayModeText.setText("1x");
 
@@ -4381,10 +4439,6 @@ public class MainActivity extends AppCompatActivity
             logPLaySeekBar.invalidate();
             logPlayCurrentTimeText.invalidate();
             logPlayTotalTimeText.invalidate();
-
-            logRemoveButton.setText(dateString);
-            logRemoveButton.setBackgroundColor(getResources().getColor(R.color.LightGoldenrodYellow));
-            logRemoveButton.setVisibility(View.VISIBLE);
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -21,6 +21,9 @@ import com.example.ueda_r.osmdroidtest1022.R;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 
 /**
@@ -122,6 +125,22 @@ public class ReadHistoryFragment extends Fragment implements View.OnClickListene
             HistoryListItem item = new HistoryListItem(filenameList.get(i));
             historyListItems.add(item);
         }
+
+        //  historyListtemsの降順ソートを行う
+        Collections.sort(historyListItems, new Comparator<HistoryListItem>() {
+            @Override
+            public int compare(HistoryListItem o1, HistoryListItem o2) {
+                String string[] = o1.getTitle().split("_");
+                String dateString = string[2].substring(0,string[2].length()-4);
+                double o1Num = Double.parseDouble(dateString);
+                String string2[] = o2.getTitle().split("_");
+                String dateString2 = string2[2].substring(0,string[2].length()-4);
+                double o2Num = Double.parseDouble(dateString2);
+                return Double.compare(o2Num,o1Num);
+            }
+        });
+        //////////
+
         historyListAdapter = new HistoryListAdapter(this.getContext(),R.layout.csv_list,historyListItems);
         historyListAdapter.setCallback(this);
         return historyListAdapter;

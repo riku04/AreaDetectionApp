@@ -506,7 +506,7 @@ public class LocationService extends Service implements LocationListener {
                 break;
             case INSIDE:
                 if (duration >= parameter.enterLogIntvl * 1000) {
-                    
+
                     bool = true;
                     lastGpsChangeTimeMillis = currentTimeMillis;
                 }
@@ -1769,7 +1769,7 @@ public class LocationService extends Service implements LocationListener {
                         logFileList.add(fileList.get(num));
                     }
                 }
-                if (logFileList.size() < 10) {    //履歴データが最大数に達していなければ新規生成
+                if (logFileList.size() < 30) {    //履歴データが最大数に達していなければ新規生成
                     locationLogger.outputLog(MainActivity.PATH_MAIN_DIRECTORY, filename);
                 } else {    //履歴数が最大なら一番古いデータを削除して新規生成
                     Log.d("LocationService", "log data reach to max quantity");
