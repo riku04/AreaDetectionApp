@@ -238,7 +238,7 @@ public class MainActivity extends AppCompatActivity
     private Button debugButtonPlus;
 
     final static boolean USB_ENABLE = true;
-    final static boolean USB_ONLY_OUTPUT = true;
+    final static boolean USB_ONLY_OUTPUT = false;
 
     private Boolean isLocationServiceRunning = false;
     private Boolean isBindStarted = false;
@@ -260,10 +260,10 @@ public class MainActivity extends AppCompatActivity
 
     enum LogPlayMode {
         LOG_PLAY_1x,
-        LOG_PLAY_2x,
+        LOG_PLAY_4x,
         LOG_PLAY_10x,
         LOG_PLAY_MINUS_1x,
-        LOG_PLAY_MINUS_2x,
+        LOG_PLAY_MINUS_4x,
         LOG_PLAY_MINUS_10x
     }
     private LogPlayMode logPlayMode = LogPlayMode.LOG_PLAY_1x;
@@ -281,7 +281,7 @@ public class MainActivity extends AppCompatActivity
     final Runnable logPLayRunnable = new Runnable() {
         @Override
         public void run() {
-            if (logPlayMode == LogPlayMode.LOG_PLAY_1x || logPlayMode == LogPlayMode.LOG_PLAY_2x || logPlayMode == LogPlayMode.LOG_PLAY_10x) {
+            if (logPlayMode == LogPlayMode.LOG_PLAY_1x || logPlayMode == LogPlayMode.LOG_PLAY_4x || logPlayMode == LogPlayMode.LOG_PLAY_10x) {
                 if (locationLogger.getNextPoint() == null) {
                     logPlayToggleFab.setBackgroundColor(getResources().getColor(R.color.colorAccent));
                     logPlayToggleFab.setImageResource(android.R.drawable.ic_media_play);
@@ -306,8 +306,8 @@ public class MainActivity extends AppCompatActivity
                     case LOG_PLAY_1x:
                         delay = delay / 1;
                         break;
-                    case LOG_PLAY_2x:
-                        delay = delay / 2;
+                    case LOG_PLAY_4x:
+                        delay = delay / 4;
                         break;
                     case LOG_PLAY_10x:
                         delay = delay / 10;
@@ -316,7 +316,7 @@ public class MainActivity extends AppCompatActivity
                 }
                 logPlayHandler.postDelayed(this, delay);
 
-            } else if (logPlayMode == LogPlayMode.LOG_PLAY_MINUS_1x || logPlayMode == LogPlayMode.LOG_PLAY_MINUS_2x || logPlayMode == LogPlayMode.LOG_PLAY_MINUS_10x) {
+            } else if (logPlayMode == LogPlayMode.LOG_PLAY_MINUS_1x || logPlayMode == LogPlayMode.LOG_PLAY_MINUS_4x || logPlayMode == LogPlayMode.LOG_PLAY_MINUS_10x) {
                 if (locationLogger.getPreviousPoint() == null) {
                     logPlayToggleFab.setBackgroundColor(getResources().getColor(R.color.colorAccent));
                     logPlayToggleFab.setImageResource(android.R.drawable.ic_media_play);
@@ -342,8 +342,8 @@ public class MainActivity extends AppCompatActivity
                     case LOG_PLAY_MINUS_1x:
                         delay = delay / 1;
                         break;
-                    case LOG_PLAY_MINUS_2x:
-                        delay = delay / 2;
+                    case LOG_PLAY_MINUS_4x:
+                        delay = delay / 4;
                         break;
                     case LOG_PLAY_MINUS_10x:
                         delay = delay / 10;
@@ -819,6 +819,7 @@ public class MainActivity extends AppCompatActivity
                 locationService.gpsChanged(location);
             }
         });
+        debugButtonPlus.setVisibility(View.INVISIBLE);
         /////////////////////////////////////////////////////////////////////
 
         int x = getResources().getDisplayMetrics().widthPixels / 15;
@@ -866,6 +867,7 @@ public class MainActivity extends AppCompatActivity
                     case INSIDE:
                         logPlayStatusText.setText("判定：禁止領域内");
                         logPlayStatusText.setBackgroundColor(getResources().getColor(R.color.Red));
+                        locationService.playAlert(1f);
                         break;
                 }
             }
@@ -910,10 +912,10 @@ public class MainActivity extends AppCompatActivity
                 }
                 switch (logPlayMode){
                     case LOG_PLAY_1x:
-                        logPlayMode = LogPlayMode.LOG_PLAY_2x;
-                        logPlayModeText.setText("2x");
+                        logPlayMode = LogPlayMode.LOG_PLAY_4x;
+                        logPlayModeText.setText("4x");
                         break;
-                    case LOG_PLAY_2x:
+                    case LOG_PLAY_4x:
                         logPlayMode = LogPlayMode.LOG_PLAY_10x;
                         logPlayModeText.setText("10x");
                         break;
@@ -921,13 +923,13 @@ public class MainActivity extends AppCompatActivity
                         logPlayMode= LogPlayMode.LOG_PLAY_1x;
                         logPlayModeText.setText("1x");
                         break;
-                    case LOG_PLAY_MINUS_2x:
+                    case LOG_PLAY_MINUS_4x:
                         logPlayMode = LogPlayMode.LOG_PLAY_MINUS_1x;
                         logPlayModeText.setText("-1x");
                         break;
                     case LOG_PLAY_MINUS_10x:
-                        logPlayMode = LogPlayMode.LOG_PLAY_MINUS_2x;
-                        logPlayModeText.setText("-2x");
+                        logPlayMode = LogPlayMode.LOG_PLAY_MINUS_4x;
+                        logPlayModeText.setText("-4x");
                         break;
                     default:
                         break;
@@ -947,19 +949,19 @@ public class MainActivity extends AppCompatActivity
                         logPlayMode = LogPlayMode.LOG_PLAY_MINUS_1x;
                         logPlayModeText.setText("-1x");
                         break;
-                    case LOG_PLAY_2x:
+                    case LOG_PLAY_4x:
                         logPlayMode = LogPlayMode.LOG_PLAY_1x;
                         logPlayModeText.setText("1x");
                         break;
                     case LOG_PLAY_10x:
-                        logPlayMode = LogPlayMode.LOG_PLAY_2x;
-                        logPlayModeText.setText("2x");
+                        logPlayMode = LogPlayMode.LOG_PLAY_4x;
+                        logPlayModeText.setText("4x");
                         break;
                     case LOG_PLAY_MINUS_1x:
-                        logPlayMode= LogPlayMode.LOG_PLAY_MINUS_2x;
-                        logPlayModeText.setText("-2x");
+                        logPlayMode= LogPlayMode.LOG_PLAY_MINUS_4x;
+                        logPlayModeText.setText("-4x");
                         break;
-                    case LOG_PLAY_MINUS_2x:
+                    case LOG_PLAY_MINUS_4x:
                         logPlayMode = LogPlayMode.LOG_PLAY_MINUS_10x;
                         logPlayModeText.setText("-10x");
                         break;
@@ -4362,7 +4364,8 @@ public class MainActivity extends AppCompatActivity
 
             String line = "";   //Approach Distance[m]
             line = bufferedReader.readLine();
-            closeDistance = Integer.parseInt(bufferedReader.readLine());
+            line = bufferedReader.readLine().split(",")[0];
+            closeDistance = Integer.parseInt(line);//(bufferedReader.readLine());
 
             line = bufferedReader.readLine();   //Area Coordinates[dig.]
             int areaNum = 0;
@@ -4394,7 +4397,6 @@ public class MainActivity extends AppCompatActivity
                 Double lat = Double.parseDouble(logLine[2]);
                 Double lon = Double.parseDouble(logLine[3]);
 
-
                 int status = Integer.parseInt(logLine[4]);
                 LocationStatus locationStatus = LocationStatus.OUTSIDE;
                 switch (status) {
@@ -4421,9 +4423,11 @@ public class MainActivity extends AppCompatActivity
             locationLogger.removeLogLine();
             locationLogger.removeLogArea();
 
-            locationLogger.drawLogArea(areaPointsList);
+            if (!areaPointsList.isEmpty()) {
+                locationLogger.drawLogArea(areaPointsList);
+            }
 
-            mMapView.getController().animateTo(areaPointsList.get(0).get(0));
+            mMapView.getController().animateTo(new GeoPoint(logDataList.get(0).latitude, logDataList.get(0).longitude));
 
             logPlayMode = LogPlayMode.LOG_PLAY_1x;
             logPlayModeText.setText("1x");
@@ -4456,7 +4460,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void targetIconFadein() {
-// 透明度を0から1に変化
+    // 透明度を0から1に変化
         AlphaAnimation alphaFadeIn = new AlphaAnimation(0.0f, 1.0f);
         // animation時間 msec
         alphaFadeIn.setDuration(1000);

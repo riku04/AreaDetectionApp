@@ -230,6 +230,7 @@ public class BleFileExplorer extends Fragment{
                     });
                     connectedDevice = device;
                     isConnected = true;
+                    stopAdvertise();
                 }
                 if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                     Log.i("BLE", "Disconnected");
@@ -401,7 +402,7 @@ public class BleFileExplorer extends Fragment{
         });
     }
 
-    int ADVERTISE_TIMEOUT_IM_MILLS = 10 * 1000;
+    int ADVERTISE_TIMEOUT_IM_MILLS = 3 * 60 * 1000;
     private AdvertiseSettings createAdvSettings() {
         AdvertiseSettings.Builder builder = new AdvertiseSettings.Builder();
         builder.setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH);
@@ -446,7 +447,6 @@ public class BleFileExplorer extends Fragment{
                 public void run() {
                     if (!isConnected) {
                         Log.d("BleFileExplorer", "timeout");
-                        stopAdvertise();
                         bfeCallback.showBfeProgressDialog(false, "");
                         bfeCallback.showBfeToast("接続タイムアウト");
                     }
@@ -456,11 +456,11 @@ public class BleFileExplorer extends Fragment{
     }
 
     private void stopAdvertise() {
-        if (btGattServer != null) {
-            btGattServer.clearServices();
-            btGattServer.close();
-            btGattServer = null;
-        }
+//        if (btGattServer != null) {
+//            btGattServer.clearServices();
+//            btGattServer.close();
+//            btGattServer = null;
+//        }
         if (btAdvertiser != null) {
             btAdvertiser.stopAdvertising(advertiseCallback);
             isAdvertising = false;
@@ -582,14 +582,14 @@ public class BleFileExplorer extends Fragment{
                             double size = 0;
                             public void run() {
                                 if (cnt < splitSendData.size()) {
-                                    Log.d("BLE", Double.toString(size += splitSendData.get(cnt).length) + " [bytes]");
+                                    Log.d("BLE", "Sending... " + (size += splitSendData.get(cnt).length) + " [bytes]");
 //                                    if(!(dataSend&&(cnt>=2))){
 //                                    }
                                     btGattCharacteristic.setValue(splitSendData.get(cnt));
                                     btGattServer.notifyCharacteristicChanged(connectedDevice, btGattCharacteristic, false);
                                     cnt++;
                                 }
-                                handler.postDelayed(this, 10);
+                                handler.postDelayed(this, 1);
                             }
                         };
                         handler.post(r);

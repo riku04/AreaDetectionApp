@@ -57,6 +57,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
@@ -93,7 +94,7 @@ public class LocationService extends Service implements LocationListener {
 
     private static final int AlertInterval = 1000;
 
-    private static final double RemainSizeMB = 10000;//50355.0;
+    private static final double RemainSizeMB = 5000;//50355.0;
 
     CustomDangerArea dangerArea;
     CustomParameter parameter;
@@ -596,7 +597,7 @@ public class LocationService extends Service implements LocationListener {
 
     private Long alertTime = 0L;
 
-    private void playAlert(float volume) {
+    public void playAlert(float volume) {
         if (!parameter.vibrationOn || !isAreaWatchingStarted) {
             return;
         }
@@ -613,7 +614,7 @@ public class LocationService extends Service implements LocationListener {
     @Override
     public void onLocationChanged(Location location) {
         if (MainActivity.USB_ONLY_OUTPUT) {
-            //return;
+            return;
         }
         Date d = new Date(location.getTime());
         SimpleDateFormat sdf = new SimpleDateFormat("dd:MM:yy");
@@ -867,8 +868,8 @@ public class LocationService extends Service implements LocationListener {
         private int closeDistance = 10;
         private int jukiDistance = 10;
 
-        private int normalLogIntvl = 5;    //通常時記録間隔
-        private int semiCloseLogIntvl = 3; //準接近時記録間隔
+        private int normalLogIntvl = 1;//5;    //通常時記録間隔
+        private int semiCloseLogIntvl = 1;//3; //準接近時記録間隔
         private int closeLogIntvl = 1;  //接近時記録間隔
         private int enterLogIntvl = 1;  //進入時記録間隔
         private int jukiCloseLogIntvl = 3;  //重機接近時記録間隔
@@ -1557,7 +1558,7 @@ public class LocationService extends Service implements LocationListener {
         private Integer isInsideDangerArea(GeoPoint point) {
             int size = areaDataArray.size() - 1;
             for (int i = 0; i <= size; i++) {
-                if (isPointInPolygon(point, areaDataArray.get(i).areaPolygon) == true) {
+                if (isPointInPolygon(point, areaDataArray.get(i).areaPolygon)) {
                     return i;
                 }
             }
@@ -1567,7 +1568,7 @@ public class LocationService extends Service implements LocationListener {
         private Integer isInsideExpandedDangerArea(GeoPoint point) {
             int size = areaDataArray.size() - 1;
             for (int i = 0; i <= size; i++) {
-                if (isPointInPolygon(point, areaDataArray.get(i).expandedPolygon) == true) {
+                if (isPointInPolygon(point, areaDataArray.get(i).expandedPolygon)) {
                     return i;
                 }
             }
@@ -1577,7 +1578,7 @@ public class LocationService extends Service implements LocationListener {
         private Integer isInsideSemiExpandedDangerArea(GeoPoint point) {
             int size = areaDataArray.size() - 1;
             for (int i = 0; i <= size; i++) {
-                if (isPointInPolygon(point, areaDataArray.get(i).semiExpandedPolygon) == true) {
+                if (isPointInPolygon(point, areaDataArray.get(i).semiExpandedPolygon)) {
                     return i;
                 }
             }
@@ -1602,7 +1603,7 @@ public class LocationService extends Service implements LocationListener {
 
             try {
                 //FileWriter fw = new FileWriter(path+"/"+filename+".csv", false);
-                PrintWriter pw = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(path + "/" + filename), "utf-8")));
+                PrintWriter pw = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(path + "/" + filename), StandardCharsets.UTF_8)));
                 pw.print(Integer.toString(parameter.closeDistance));
                 pw.println();
                 pw.print("No.,latitude[deg.],longitude[deg.]");
@@ -1617,7 +1618,7 @@ public class LocationService extends Service implements LocationListener {
             }
         }
 
-        public Double getRoundedDouble(Double val, int decimalDegit) {
+        Double getRoundedDouble(Double val, int decimalDegit) {
             BigDecimal bigDecimal = new BigDecimal(Double.toString(val));
             bigDecimal = bigDecimal.setScale(decimalDegit, BigDecimal.ROUND_HALF_UP);
             val = Double.parseDouble(bigDecimal.toString());
